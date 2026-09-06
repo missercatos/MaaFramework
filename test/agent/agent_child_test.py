@@ -9,10 +9,11 @@ AgentServer 端测试
 5. Controller: 各种输入操作、post_key_down/up、post_scroll
 """
 
-import os
-from pathlib import Path
-import sys
 import io
+import os
+import sys
+from pathlib import Path
+
 import numpy
 
 # Fix encoding issues on Windows (cp1252 cannot encode some Unicode characters)
@@ -37,16 +38,14 @@ if str(binding_dir) not in sys.path:
 
 # Must be imported first
 from maa.agent.agent_server import AgentServer
-
-from maa.resource import ResourceEventSink
-from maa.controller import ControllerEventSink
-from maa.tasker import Tasker, TaskerEventSink
 from maa.context import Context, ContextEventSink
+from maa.controller import ControllerEventSink
 from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 from maa.library import Library
-from maa.pipeline import JRecognitionType, JActionType, JOCR, JClick
-
+from maa.pipeline import JOCR, JActionType, JClick, JRecognitionType
+from maa.resource import ResourceEventSink
+from maa.tasker import Tasker, TaskerEventSink
 
 analyzed: bool = False
 runned: bool = False
@@ -65,7 +64,6 @@ def main():
 
 @AgentServer.custom_recognition("MyRec")
 class MyRecognition(CustomRecognition):
-
     def analyze(
         self,
         context: Context,
@@ -130,9 +128,9 @@ class MyRecognition(CustomRecognition):
         new_ctx.set_anchor("test_anchor", "TaskA")
         anchor_result = new_ctx.get_anchor("test_anchor")
         print(f"  anchor_result: {anchor_result}")
-        assert (
-            anchor_result == "TaskA"
-        ), f"anchor should be 'TaskA', got {anchor_result}"
+        assert anchor_result == "TaskA", (
+            f"anchor should be 'TaskA', got {anchor_result}"
+        )
 
         # 测试 hit count API
         hit_count = new_ctx.get_hit_count(argv.node_name)
@@ -141,11 +139,14 @@ class MyRecognition(CustomRecognition):
 
         # 测试 wait_freezes API（参数校验：time 和 wait_freezes_param.time 同时为零应返回 false）
         from maa.pipeline import JWaitFreezes
-        wait_result = new_ctx.wait_freezes(time=0, wait_freezes_param=JWaitFreezes(time=0))
+
+        wait_result = new_ctx.wait_freezes(
+            time=0, wait_freezes_param=JWaitFreezes(time=0)
+        )
         print(f"  wait_freezes (both zero): {wait_result}")
-        assert (
-            not wait_result
-        ), "wait_freezes should return false when both time are zero"
+        assert not wait_result, (
+            "wait_freezes should return false when both time are zero"
+        )
 
         # 测试 override_image (Context 级别)
         test_image = numpy.zeros((100, 100, 3), dtype=numpy.uint8)
@@ -213,9 +214,9 @@ class MyRecognition(CustomRecognition):
         # 测试 get_default_recognition_param
         ocr_default = resource.get_default_recognition_param(JRecognitionType.OCR)
         print(f"  ocr_default: {ocr_default}")
-        assert (
-            ocr_default is not None
-        ), "get_default_recognition_param should return value"
+        assert ocr_default is not None, (
+            "get_default_recognition_param should return value"
+        )
 
         # 测试 get_default_action_param
         click_default = resource.get_default_action_param(JActionType.Click)
@@ -274,9 +275,9 @@ class MyAction(CustomAction):
         assert "type" in info, "info should contain 'type'"
         assert isinstance(info["type"], str), "info['type'] should be a str"
         assert info["type"] == "replay", "info['type'] should be 'replay'"
-        assert (
-            "image_count" in info or "record_count" in info
-        ), "info should contain at least 'image_count' or 'record_count'"
+        assert "image_count" in info or "record_count" in info, (
+            "info should contain at least 'image_count' or 'record_count'"
+        )
 
         # 测试基本输入操作
         controller.post_click(191, 98).wait()
@@ -333,9 +334,9 @@ class MyAction(CustomAction):
         # 测试 set_background_managed_keys (non-Win32, should fail)
         result = controller.set_background_managed_keys([0x57, 0x41])
         print(f"  set_background_managed_keys([0x57, 0x41]): {result}")
-        assert (
-            not result
-        ), "set_background_managed_keys should fail for non-Win32 controller"
+        assert not result, (
+            "set_background_managed_keys should fail for non-Win32 controller"
+        )
 
         # ============================================================
         # Tasker API 补充测试 (详情获取)
